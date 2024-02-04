@@ -7,6 +7,7 @@
 
 import Files
 import ArgumentParser
+import NnExecutableManager
 
 fileprivate let nnToolsPath = "/Users/nelix/nnTools"
 
