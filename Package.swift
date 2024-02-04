@@ -18,8 +18,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/JohnSundell/Files", from: "4.0.0"),
-//        .package(url: "https://github.com/kareman/SwiftShell", from: "5.0.0"),
-//        .package(url: "https://github.com/nikolainobadi/SwiftPickerCLI", branch: "main"),
+        .package(url: "https://github.com/kareman/SwiftShell", from: "5.0.0"),
+        .package(url: "https://github.com/nikolainobadi/SwiftPickerCLI", branch: "main"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0")
     ],
     targets: [
@@ -27,8 +27,8 @@ let package = Package(
             name: "NnExecutableManager",
             dependencies: [
                 "Files",
-//                "SwiftShell",
-//                "SwiftPickerCLI",
+                "SwiftShell",
+                "SwiftPickerCLI",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
         ),

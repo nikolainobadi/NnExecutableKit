@@ -1,6 +1,15 @@
 {
   "pins" : [
     {
+      "identity" : "ansiterminalmodified",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nikolainobadi/ANSITerminalModified",
+      "state" : {
+        "revision" : "0eedbc2bbf75e6513190274f8246a851fae6d015",
+        "version" : "0.5.0"
+      }
+    },
+    {
       "identity" : "files",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/JohnSundell/Files",
@@ -16,6 +25,24 @@
       "state" : {
         "revision" : "6b2aa2748a7881eebb9f84fb10c01293e15b52ca",
         "version" : "0.5.0"
+      }
+    },
+    {
+      "identity" : "swiftpickercli",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nikolainobadi/SwiftPickerCLI",
+      "state" : {
+        "branch" : "main",
+        "revision" : "29ab91b0cb986cfada5e68dc031f8674b7ca7b99"
+      }
+    },
+    {
+      "identity" : "swiftshell",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kareman/SwiftShell",
+      "state" : {
+        "revision" : "99680b2efc7c7dbcace1da0b3979d266f02e213c",
+        "version" : "5.1.0"
       }
     }
   ],

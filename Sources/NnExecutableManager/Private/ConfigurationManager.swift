@@ -15,19 +15,19 @@ enum ConfigurationManager {
 }
 
 
-// MARK: - 
+// MARK: -
 extension ConfigurationManager {
     static func loadConfiguration() {
         do {
             let configFile = try File(path: configFilePath)
             let data = try configFile.read()
-            let decoder = JSONDecoder()
-            configuration = try decoder.decode(Configuration.self, from: Data(data))
+            
+            configuration = try JSONDecoder().decode(Configuration.self, from: Data(data))
         } catch {
             print("Failed to load or decode configuration, using default. Error: \(error)")
             configuration = defaultConfiguration
             // Optionally, save the default configuration to the file for future reference
-            // saveConfiguration()
+             saveConfiguration()
         }
     }
     
@@ -37,12 +37,9 @@ extension ConfigurationManager {
         do {
             let encoder = JSONEncoder()
             let data = try encoder.encode(configuration)
-            if let folder = try? Folder(path: "\(Folder.home.path).config/NnExecutableManager"),
-               let _ = try? folder.createFileIfNeeded(withName: "config.json", contents: data) {
-                print("Configuration saved successfully.")
-            } else {
-                print("Failed to save configuration: Folder not found or inaccessible.")
-            }
+            let configFolder = try Folder.home.createSubfolderIfNeeded(withName: ".config")
+            let nnConfigFolder = try configFolder.createSubfolderIfNeeded(withName: "NnExecutableManager")
+            let _ = try? nnConfigFolder.createFileIfNeeded(withName: "config.json", contents: data) 
         } catch {
             print("Failed to encode or save configuration: \(error)")
         }
