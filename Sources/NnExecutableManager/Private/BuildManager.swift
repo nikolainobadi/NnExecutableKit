@@ -13,7 +13,7 @@ enum BuildManager {
         let buildCommand = "swift build -c \(buildType.rawValue)"
         let finalCommand = directory != nil ? "\(buildCommand) --package-path '\(directory!.path)'" : buildCommand
         
-        print("preparing to build project with command:", finalCommand)
+        print("preparing to build project for \(buildType.rawValue)")
         
         try runAndPrint(bash: finalCommand)
         
