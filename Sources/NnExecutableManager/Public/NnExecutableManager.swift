@@ -29,7 +29,7 @@ public extension NnExecutableManager {
         try buildManager.buildProject(buildType: buildConfiguration, in: folder)
         
         guard let executableFile = try? fetcher.fetchExecutable(buildType: buildConfiguration) else {
-            throw NnExecutableError.cannotCreateBuild
+            throw NnExecutableError.fetchFailure
         }
         
         try copyExecutableFile(executableFile, to: folder, config: config)
