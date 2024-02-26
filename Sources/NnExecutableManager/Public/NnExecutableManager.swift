@@ -1,14 +1,9 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-import Files
-import Foundation
-
 public enum NnExecutableManager {
-    private static let copier = FileCopier.self
+    private static let fileManager = NnFilesManager.self
     private static let buildManager = BuildManager.self
-    private static let fetcher = ExecutableFetcher.self
-    private static let detector = ProjectTypeDetector.self
     private static let configManager = ConfigManager.self
 }
 
@@ -31,30 +26,18 @@ public extension NnExecutableManager {
 // MARK: - Executable
 public extension NnExecutableManager {
     static func manageExecutable(buildConfiguration: BuildType, at path: String? = nil) throws {
-        let folder = Folder.current
+        let folder = fileManager.currentFolder
 
-        guard try detector.directoryCanBuildExecutable(folder) else {
+        guard try fileManager.folderCanBuildExecutable(folder) else {
             throw NnExecutableError.cannotCreateBuild
         }
         
-        try buildManager.buildProject(buildType: buildConfiguration, path: path ?? folder.path)
+        try buildManager.buildProject(buildType: buildConfiguration, path: folder.path)
         
-        guard let executableFile = try? fetcher.fetchExecutable(buildType: buildConfiguration) else {
+        guard let executableFile = try? fileManager.fetchExecutable(buildType: buildConfiguration, projectFolder: folder) else {
             throw NnExecutableError.fetchFailure
         }
         
-        try copyExecutableFile(executableFile, to: folder, config: configManager.config)
-    }
-}
-
-
-// MARK: - Private Methods
-private extension NnExecutableManager {
-    static func copyExecutableFile(_ file: File, to folder: Folder, config: NnExConfig) throws {
-        let nnToolsFolder = try Folder(path: config.nnToolsPath)
-        let projectFolder = try nnToolsFolder.createSubfolderIfNeeded(withName: folder.name)
-        try copier.copyExecutable(file: file, to: projectFolder)
-        
-        print("Successfully managed executable for \(folder.name)")
+        try fileManager.copyExecutableFile(executableFile, to: folder, config: configManager.config)
     }
 }
