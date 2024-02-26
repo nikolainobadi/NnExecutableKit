@@ -20,6 +20,7 @@ let package = Package(
         .package(url: "https://github.com/JohnSundell/Files", from: "4.0.0"),
         .package(url: "https://github.com/kareman/SwiftShell", from: "5.0.0"),
         .package(url: "https://github.com/nikolainobadi/SwiftPickerCLI", branch: "main"),
+        .package(url: "https://github.com/nikolainobadi/NnConfigGen", branch: "main"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0")
     ],
     targets: [
@@ -29,6 +30,7 @@ let package = Package(
                 "Files",
                 "SwiftShell",
                 "SwiftPickerCLI",
+                "NnConfigGen",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
         ),

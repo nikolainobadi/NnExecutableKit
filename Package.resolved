@@ -19,6 +19,15 @@
       }
     },
     {
+      "identity" : "nnconfiggen",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nikolainobadi/NnConfigGen",
+      "state" : {
+        "branch" : "main",
+        "revision" : "368e421e31402e350522ceb5dfc6b2b24b46dbfb"
+      }
+    },
+    {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser.git",
