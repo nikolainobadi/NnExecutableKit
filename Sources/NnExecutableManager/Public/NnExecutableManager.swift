@@ -37,7 +37,7 @@ public extension NnExecutableManager {
             throw NnExecutableError.cannotCreateBuild
         }
         
-        try buildManager.buildProject(buildType: buildConfiguration, in: folder)
+        try buildManager.buildProject(buildType: buildConfiguration, path: path ?? folder.path)
         
         guard let executableFile = try? fetcher.fetchExecutable(buildType: buildConfiguration) else {
             throw NnExecutableError.fetchFailure
