@@ -5,34 +5,25 @@
 //  Created by Nikolai Nobadi on 2/3/24.
 //
 
-import NnConfigGen
+import NnConfigKit
 
-enum ConfigManager {
-    private static let configGen = NnConfigGen.self
+struct ConfigManager {
+    let configGen: NnConfigManager<NnExConfig>
     
-    static var config: NnExConfig = .init()
-    static var noConfig: Bool {
-        return config.nnToolsPath.isEmpty
+    init() {
+        self.configGen = .init(projectName: "NnExecutableManager")
     }
 }
 
 
 // MARK: - Config
 extension ConfigManager {
-    static func loadConfig() throws {
-        config = try configGen.loadConfig(projectName: config.projectName)
+    func loadConfig() throws {
+//        config = try configGen.loadConfig()
     }
     
-    static func createDefaultConfig() throws {
-        config = .defaultConfig
-        try configGen.saveConfig(config: config)
-    }
-}
-
-
-// MARK: - Extension Dependencies
-extension NnExConfig: NnConfig {
-    public var projectName: String {
-        return "NnExecutableManager"
+    func createDefaultConfig() throws {
+//        config = .defaultConfig
+//        try configGen.saveConfig(config)
     }
 }

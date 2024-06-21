@@ -1,7 +1,7 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-public enum NnExecutableManager {
+public enum OldNnExecutableManager {
     private static let fileManager = NnFilesManager.self
     private static let buildManager = BuildManager.self
     private static let configManager = ConfigManager.self
@@ -9,22 +9,22 @@ public enum NnExecutableManager {
 
 
 // MARK: - Config
-public extension NnExecutableManager {
+public extension OldNnExecutableManager {
     static func loadConfig() throws {
-        do {
-            try configManager.loadConfig()
-        } catch {
-            if configManager.noConfig {
-                print("Couldn't find config file, creating default.")
-                try configManager.createDefaultConfig()
-            }
-        }
+//        do {
+//            try configManager.loadConfig()
+//        } catch {
+//            if configManager.noConfig {
+//                print("Couldn't find config file, creating default.")
+//                try configManager.createDefaultConfig()
+//            }
+//        }
     }
 }
 
 
 // MARK: - Executable
-public extension NnExecutableManager {
+public extension OldNnExecutableManager {
     static func manageExecutable(buildConfiguration: BuildType, at path: String? = nil) throws {
         let folder = fileManager.currentFolder
 
@@ -38,6 +38,6 @@ public extension NnExecutableManager {
             throw NnExecutableError.fetchFailure
         }
         
-        try fileManager.copyExecutableFile(executableFile, to: folder, config: configManager.config)
+//        try fileManager.copyExecutableFile(executableFile, to: folder, config: configManager.config)
     }
 }

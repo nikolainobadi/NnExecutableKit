@@ -20,6 +20,6 @@ struct ExecutableManagerCommand: ParsableCommand {
     func run() throws {
         let buildType = BuildType(type: buildConfiguration) ?? .debug
         
-        try NnExecutableManager.manageExecutable(buildConfiguration: buildType, at: path)
+        try OldNnExecutableManager.manageExecutable(buildConfiguration: buildType, at: path)
     }
 }

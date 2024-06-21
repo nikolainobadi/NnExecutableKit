@@ -8,7 +8,7 @@
 import NnExecutableManager
 
 do {
-    try NnExecutableManager.loadConfig()
+    try OldNnExecutableManager.loadConfig()
     ExecutableManagerCommand.main()
 } catch {
     print("Unable to launch NnExecutableManager")

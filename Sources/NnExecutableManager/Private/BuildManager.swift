@@ -15,15 +15,4 @@ enum BuildManager {
         try runAndPrint(bash: buildCommand)
         print("project has build successfully")
     }
-    
-//    static func buildProject(buildType: BuildType, in directory: Folder? = nil) throws {
-//        let buildCommand = "swift build -c \(buildType.rawValue)"
-//        let finalCommand = directory != nil ? "\(buildCommand) --package-path '\(directory!.path)'" : buildCommand
-//        
-//        print("preparing to build project for \(buildType.rawValue)")
-//        
-//        try runAndPrint(bash: finalCommand)
-//        
-//        print("project has build successfully")
-//    }
 }
