@@ -4,17 +4,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "NnExecutableManager",
+    name: "NnExecutableKit",
     platforms: [
         .macOS(.v10_14),
     ], 
     products: [
         .library(
-            name: "NnExecutableManager",
-            targets: ["NnExecutableManager"]),
+            name: "NnExecutableKit",
+            targets: ["NnExecutableKit"]),
         .executable(
-            name: "NnExecutableManagerExecutable",
-            targets: ["NnExecutableManagerExecutable"]),
+            name: "NnExecutableKitExecutable",
+            targets: ["NnExecutableKitExecutable"]),
     ],
     dependencies: [
         .package(url: "https://github.com/JohnSundell/Files", from: "4.0.0"),
@@ -24,7 +24,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "NnExecutableManager",
+            name: "NnExecutableKit",
             dependencies: [
                 "Files",
                 "SwiftShell",
@@ -32,9 +32,9 @@ let package = Package(
             ]
         ),
         .executableTarget(
-            name: "NnExecutableManagerExecutable",
+            name: "NnExecutableKitExecutable",
             dependencies: [
-                "NnExecutableManager",
+                "NnExecutableKit",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
         )

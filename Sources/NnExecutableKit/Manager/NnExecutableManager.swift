@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  NnExecutableManager.swift
 //  
 //
 //  Created by Nikolai Nobadi on 6/21/24.
@@ -9,22 +9,15 @@ import Files
 import SwiftShell
 
 public struct NnExecutableManager {
-    let store: ConfigStore
-}
-
-
-// MARK: - Init
-public extension NnExecutableManager {
-    init() {
-        self.init(store: ConfigStoreAdapter())
-    }
+    public init() { }
 }
 
 
 // MARK: - Actions
 public extension NnExecutableManager {
-    func manageExecutable(buildType: BuildType) throws {
+    func manageExecutable(buildType: BuildType?) throws {
         let config = try loadConfig()
+        let buildType = buildType ?? .debug
         let projectFolder = try loadCurrentFolderWithExecutable()
         
         try buildProject(buildType: buildType, path: projectFolder.path)
@@ -41,11 +34,9 @@ public extension NnExecutableManager {
 // MARK: - Private Methods
 private extension NnExecutableManager {
     func loadConfig() throws -> NnExConfig {
-        do {
-            return try store.loadConfig()
-        } catch {
-            fatalError()
-        }
+        // TODO: - should load actual config
+        
+        return .defaultConfig
     }
     
     func loadCurrentFolderWithExecutable() throws -> Folder {
@@ -91,11 +82,4 @@ private extension NnExecutableManager {
         
         print("Successfully managed executable for \(projectName)")
     }
-}
-
-
-// MARK: - Dependencies
-protocol ConfigStore {
-    func loadConfig() throws -> NnExConfig
-    func saveConfig(_ config: NnExConfig) throws
 }

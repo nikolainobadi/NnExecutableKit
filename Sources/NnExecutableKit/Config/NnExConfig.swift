@@ -5,15 +5,13 @@
 //  Created by Nikolai Nobadi on 2/3/24.
 //
 
-import Foundation
+import Files
 
 public struct NnExConfig: Codable {
     public var nnToolsPath: String
-    public var buildConfiguration: String
 
-    public init(nnToolsPath: String = "", buildConfiguration: String = "") {
+    public init(nnToolsPath: String = "") {
         self.nnToolsPath = nnToolsPath
-        self.buildConfiguration = buildConfiguration
     }
 }
 
@@ -21,6 +19,6 @@ public struct NnExConfig: Codable {
 // MARK: - Default
 extension NnExConfig {
     static var defaultConfig: NnExConfig {
-        return .init(nnToolsPath: "\(NSHomeDirectory())/nnTools", buildConfiguration: "debug")
+        return .init(nnToolsPath: "\(Folder.home.path)nnTools")
     }
 }

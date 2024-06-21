@@ -6,20 +6,22 @@
 //
 
 import ArgumentParser
-import NnExecutableManager
+import NnExecutableKit
 
 struct ExecutableManagerCommand: ParsableCommand {
-    static let configuration = CommandConfiguration(abstract: "Utility to manage and copy Swift project executables into nnTools directory.")
+    static let configuration = CommandConfiguration(abstract: "Utility to manage and copy Swift project executables into a more convenient directory.")
     
     @Option(name: [.customLong("exec"), .customShort("e")], help: "Specify 'debug' or 'release' to copy the corresponding executable.")
-    var buildConfiguration: String?
+    var buildType: BuildType?
     
     @Option(name: [.customLong("path"), .customShort("p")], help: "Optional path to the project directory.")
     var path: String?
     
     func run() throws {
-        let buildType = BuildType(type: buildConfiguration) ?? .debug
-        
-        try OldNnExecutableManager.manageExecutable(buildConfiguration: buildType, at: path)
+        try NnExecutableManager().manageExecutable(buildType: buildType)
     }
 }
+
+
+// MARK: - Extension Dependencies
+extension BuildType: ExpressibleByArgument { }
