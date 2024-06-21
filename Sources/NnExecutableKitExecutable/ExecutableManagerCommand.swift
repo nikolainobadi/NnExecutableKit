@@ -14,9 +14,6 @@ struct ExecutableManagerCommand: ParsableCommand {
     @Option(name: [.customLong("exec"), .customShort("e")], help: "Specify 'debug' or 'release' to copy the corresponding executable.")
     var buildType: BuildType?
     
-    @Option(name: [.customLong("path"), .customShort("p")], help: "Optional path to the project directory.")
-    var path: String?
-    
     func run() throws {
         try NnExecutableManager().manageExecutable(buildType: buildType)
     }

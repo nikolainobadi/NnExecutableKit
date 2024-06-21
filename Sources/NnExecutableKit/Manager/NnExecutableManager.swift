@@ -75,6 +75,7 @@ private extension NnExecutableManager {
         let projectFolder = try nnToolsFolder.createSubfolderIfNeeded(withName: projectName)
         
         if projectFolder.containsFile(named: file.name) {
+            print("Deleting old executable to replace with latest build...")
             try projectFolder.file(named: file.name).delete()
         }
         
