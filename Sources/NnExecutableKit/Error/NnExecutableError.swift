@@ -8,6 +8,7 @@
 public enum NnExecutableError: Error {
     case cannotCreateBuild
     case fetchFailure
+    case missingScheme
 }
 
 extension NnExecutableError {
@@ -17,6 +18,8 @@ extension NnExecutableError {
             return "Directory cannot build an executable."
         case .fetchFailure:
             return "Failed to fetch executable."
+        case .missingScheme:
+            return "Cannot find scheme for xcode project"
         }
     }
 }
