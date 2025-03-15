@@ -1,5 +1,5 @@
 //
-//  NnExecutableManager.swift
+//  ExecutableManager.swift
 //  
 //
 //  Created by Nikolai Nobadi on 6/21/24.
@@ -10,7 +10,7 @@ import SwiftShell
 import Foundation
 import SwiftPicker
 
-public struct NnExecutableManager {
+public struct ExecutableManager {
     private let picker: SwiftPicker
     private let defaults: UserDefaults
     
@@ -22,7 +22,7 @@ public struct NnExecutableManager {
 
 
 // MARK: - Actions
-public extension NnExecutableManager {
+public extension ExecutableManager {
     func manageExecutable(buildType: BuildType) throws {
         let destination = try loadDestination()
         let projectFolder = try loadCurrentFolderWithExecutable()
@@ -39,7 +39,7 @@ public extension NnExecutableManager {
 
 
 // MARK: - Private Methods
-private extension NnExecutableManager {
+private extension ExecutableManager {
     func loadDestination() throws -> String {
         if let path = defaults.string(forKey: .destinationKey), !path.isEmpty {
             return path
