@@ -48,7 +48,7 @@ struct ExecutableManagerTests {
             projectBuilder: mockProjectBuilder
         )
 
-        #expect(throws: NnExecutableError.missingToolPath) {
+        #expect(throws: ExecutableError.missingToolPath) {
             try manager.manageExecutable(buildType: .release)
         }
     }
@@ -65,7 +65,7 @@ struct ExecutableManagerTests {
             projectBuilder: mockProjectBuilder
         )
 
-        #expect(throws: NnExecutableError.cannotCreateBuild) {
+        #expect(throws: ExecutableError.cannotCreateBuild) {
             try manager.manageExecutable(buildType: .release)
         }
     }
@@ -90,7 +90,7 @@ struct ExecutableManagerTests {
             projectBuilder: mockProjectBuilder
         )
 
-        #expect(throws: NnExecutableError.fetchFailure) {
+        #expect(throws: ExecutableError.fetchFailure) {
             try manager.manageExecutable(buildType: .release)
         }
     }
@@ -121,12 +121,12 @@ struct MockFolderHandler: FolderHandler {
     var shouldThrowError = false
 
     func getCurrentFolder() throws -> ProjectFolder {
-        if shouldThrowError { throw NnExecutableError.cannotCreateBuild }
+        if shouldThrowError { throw ExecutableError.cannotCreateBuild }
         return simulatedProjectFolder!
     }
 
     func getSubfolder(named: String, in folder: ProjectFolder) throws -> Folder {
-        if shouldThrowError { throw NnExecutableError.fetchFailure }
+        if shouldThrowError { throw ExecutableError.fetchFailure }
         return simulatedBuildFolder!
     }
 
@@ -150,7 +150,7 @@ final class MockProjectBuilder: ProjectBuilder {
     }
 
     func build(project: ProjectFolder, buildType: BuildType) throws {
-        if shouldThrowError { throw NnExecutableError.cannotCreateBuild }
+        if shouldThrowError { throw ExecutableError.cannotCreateBuild }
         buildCalled = true
     }
 }

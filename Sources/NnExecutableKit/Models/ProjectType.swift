@@ -7,6 +7,6 @@
 
 import Foundation
 
-enum ProjectType {
+public enum ProjectType {
     case package, project
 }

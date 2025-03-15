@@ -10,9 +10,7 @@ import Files
 struct ProjectFolder {
     let folder: Folder
     let type: ProjectType
-}
-
-extension ProjectFolder {
+    
     var name: String {
         return folder.name
     }

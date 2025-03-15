@@ -6,15 +6,18 @@
 //
 
 import Files
+import Foundation
 
 public struct ExecutableManager {
-    private let pathStore: PathStore
-    private let folderHandler: FolderHandler
+    private let key: String
+    private let defaults: UserDefaults
+    private let currentFolderPath: String?
     private let projectBuilder: ProjectBuilder
     
-    init(pathStore: PathStore, folderHandler: FolderHandler, projectBuilder: ProjectBuilder) {
-        self.pathStore = pathStore
-        self.folderHandler = folderHandler
+    init(key: String = "", defaults: UserDefaults = .standard, currentFolderPath: String?, projectBuilder: ProjectBuilder) {
+        self.key = key
+        self.defaults = defaults
+        self.currentFolderPath = currentFolderPath
         self.projectBuilder = projectBuilder
     }
 }
@@ -23,54 +26,95 @@ public struct ExecutableManager {
 // MARK: - Init
 public extension ExecutableManager {
     init() {
-        self.init(pathStore: UserDefaultsPathStore(), folderHandler: DefaultFolderHandler(), projectBuilder: DefaultProjectBuilder())
+        self.init(currentFolderPath: nil, projectBuilder: DefaultProjectBuilder())
     }
 }
 
 
 // MARK: - Actions
 public extension ExecutableManager {
+    func setPath(path: String) throws {
+        if path.isEmpty {
+            throw ExecutableError.missingToolPath
+        }
+        
+        defaults.set(path, forKey: key)
+    }
+    
+    func deletePath() {
+        defaults.removeObject(forKey: key)
+    }
+    
+    func printPath() {
+        guard let path = try? loadDestination() else {
+            print("No Destination path set")
+            return
+        }
+        
+        print("Current Destination:", path)
+    }
+    
     func manageExecutable(buildType: BuildType) throws {
+        print("new version")
         let destination = try loadDestination()
-        let projectFolder = try folderHandler.getCurrentFolder()
+        let currentFolder = try getCurrentFolder()
+        let projectType = try getProjectType(of: currentFolder)
 
-        try projectBuilder.build(project: projectFolder, buildType: buildType)
+        try projectBuilder.buildProject(name: currentFolder.name, path: currentFolder.path, projectType: projectType, buildType: buildType)
 
-        guard let executableFile = try? fetchExecutable(buildType: buildType, projectFolder: projectFolder) else {
-            throw NnExecutableError.fetchFailure
+        guard let file = try? fetchExecutableFilePath(buildType: buildType, folder: currentFolder) else {
+            throw ExecutableError.fetchFailure
         }
 
-        try copyExecutableFile(executableFile, projectName: projectFolder.name, destination: destination)
+        try copyExecutableFile(file, projectName: currentFolder.name, destination: destination)
     }
 }
 
 
 // MARK: - Private Methods
 private extension ExecutableManager {
+    func getCurrentFolder() throws -> Folder {
+        guard let currentFolderPath else {
+            return Folder.current
+        }
+        
+        return try Folder(path: currentFolderPath)
+    }
+    
+    func getProjectType(of folder: Folder) throws -> ProjectType {
+        if folder.containsFile(named: "Package.swift") {
+            return .package
+        }
+        
+        if folder.subfolders.contains(where: { $0.extension == "xcodeproj" }) {
+            return .project
+        }
+        
+        throw ExecutableError.missingProjectType
+    }
+    
     func loadDestination() throws -> String {
-        guard let path = pathStore.getDestinationPath(), !path.isEmpty else {
+        guard let path = defaults.string(forKey: key), !path.isEmpty else {
             print("Missing Path (use 'set-path' to set the destination for your executables)")
-            throw NnExecutableError.missingToolPath
+            throw ExecutableError.missingToolPath
         }
         
         return path
     }
 
-    func fetchExecutable(buildType: BuildType, projectFolder: ProjectFolder) throws -> File? {
-        guard let buildFolder = try? folderHandler.getSubfolder(named: ".build/\(buildType.rawValue)", in: projectFolder) else {
+    func fetchExecutableFilePath(buildType: BuildType, folder: Folder) throws -> File? {
+        guard let buildFolder = try? folder.subfolder(named: ".build/\(buildType.rawValue)") else {
             return nil
         }
 
-        return folderHandler.getFiles(in: buildFolder).first {
-            $0.nameExcludingExtension.contains(projectFolder.name) && $0.extension == nil
-        }
+        return buildFolder.files.map({ $0 }).first(where: { $0.nameExcludingExtension.contains(folder.name) && $0.extension == nil })
     }
 
     func copyExecutableFile(_ file: File, projectName: String, destination: String) throws {
-        let nnToolsFolder = try Folder(path: destination)
-        let projectFolder = try nnToolsFolder.createSubfolderIfNeeded(withName: projectName)
+        let toolsFolder = try Folder(path: destination)
+        let projectFolder = try toolsFolder.createSubfolderIfNeeded(withName: projectName)
 
-        try folderHandler.copyFile(file, to: projectFolder)
+        try file.copy(to: projectFolder)
         
         print("Successfully managed executable for \(projectName)")
     }
@@ -78,146 +122,6 @@ private extension ExecutableManager {
 
 
 // MARK: - Dependencies
-protocol ProjectBuilder {
-    func build(project: ProjectFolder, buildType: BuildType) throws
+public protocol ProjectBuilder {
+    func buildProject(name: String, path: String, projectType: ProjectType, buildType: BuildType) throws
 }
-
-protocol PathStore {
-    func getDestinationPath() -> String?
-    func setDestinationPath(_ path: String)
-}
-
-protocol FolderHandler {
-    func getCurrentFolder() throws -> ProjectFolder
-    func getSubfolder(named: String, in folder: ProjectFolder) throws -> Folder
-    func getFiles(in folder: Folder) -> [File]
-    func createSubfolderIfNeeded(named: String, in folder: Folder) throws -> Folder
-    func copyFile(_ file: File, to destination: Folder) throws
-}
-
-
-//public struct ExecutableManager {
-//    private let picker: SwiftPicker
-//    private let defaults: UserDefaults
-//    
-//    public init(picker: SwiftPicker = .init(), defaults: UserDefaults = .standard) {
-//        self.picker = picker
-//        self.defaults = defaults
-//    }
-//}
-//
-//
-//// MARK: - Actions
-//public extension ExecutableManager {
-//    func manageExecutable(buildType: BuildType) throws {
-//        let destination = try loadDestination()
-//        let projectFolder = try loadCurrentFolderWithExecutable()
-//        
-//        try buildProject(project: projectFolder, buildType: buildType)
-//        
-//        guard let executableFile = try? fetchExecutable(buildType: buildType, projectFolder: projectFolder) else {
-//            throw NnExecutableError.fetchFailure
-//        }
-//        
-//        try copyExecutableFile(executableFile, projectName: projectFolder.name, destination: destination)
-//    }
-//}
-//
-//
-//// MARK: - Private Methods
-//private extension ExecutableManager {
-//    func loadDestination() throws -> String {
-//        if let path = defaults.string(forKey: .destinationKey), !path.isEmpty {
-//            return path
-//        }
-//        
-//        let path = try picker.getRequiredInput("Enter the path to the folder where you want your tools to reside.")
-//        
-//        defaults.set(path, forKey: .destinationKey)
-//        
-//        guard let path = defaults.string(forKey: .destinationKey), !path.isEmpty else {
-//            throw NnExecutableError.cannotCreateBuild
-//        }
-//        
-//        return path
-//    }
-//    
-//    func loadCurrentFolderWithExecutable() throws -> ProjectFolder {
-//        let folder = Folder.current
-//        
-//        if folder.containsFile(named: "Package.swift") {
-//            return .init(folder: folder, type: .package)
-//        }
-//        
-//        if folder.subfolders.filter({ $0.extension == "xcodeproj" }).count > 0 {
-//            return .init(folder: folder, type: .project)
-//        }
-//        
-//        throw NnExecutableError.cannotCreateBuild
-//    }
-//    
-//    func buildProject(project: ProjectFolder, buildType: BuildType) throws {
-//        let buildCommand = try makeBuildCommand(for: project, buildType: buildType)
-//        
-//        try runAndPrint(bash: buildCommand)
-//    }
-//    
-//    func makeBuildCommand(for project: ProjectFolder, buildType: BuildType) throws -> String {
-//        switch project.type {
-//        case .package:
-//            return "swift build -c \(buildType.rawValue)"
-//        case .project:
-//            guard let scheme = selectScheme("\(project.path)\(project.name).xcodeproj") else {
-//                throw NnExecutableError.missingScheme
-//            }
-//            
-//            return "xcodebuild -scheme \(scheme) -configuration \(buildType.rawValue) SYMROOT=$(PWD)/.build"
-//        }
-//    }
-//    
-//    func selectScheme(_ path: String) -> String? {
-//        let output = run(bash: "xcodebuild -list -project \(path)").stdout
-//        var schemes = [String]()
-//        var schemesSection = false
-//        
-//        for line in output.split(separator: "\n") {
-//            if line.contains("Schemes:") {
-//                schemesSection = true
-//                continue
-//            }
-//            if schemesSection {
-//                if line.trimmingCharacters(in: .whitespaces).isEmpty {
-//                    break
-//                }
-//                schemes.append(line.trimmingCharacters(in: .whitespaces))
-//            }
-//        }
-//        
-//        return schemes.first
-//    }
-//    
-//    func fetchExecutable(buildType: BuildType, projectFolder: ProjectFolder) throws -> File? {
-//        let projectName = projectFolder.name
-//        
-//        guard let buildFolder = try? projectFolder.folder.subfolder(at: ".build/\(buildType.rawValue)") else {
-//            print("unable to locate build folder for project at path", projectFolder.path)
-//            return nil
-//        }
-//    
-//        return buildFolder.files.first(where: { $0.nameExcludingExtension.contains("\(projectName)") && $0.extension == nil })
-//    }
-//    
-//    func copyExecutableFile(_ file: File, projectName: String, destination: String) throws {
-//        let nnToolsFolder = try Folder(path: destination)
-//        let projectFolder = try nnToolsFolder.createSubfolderIfNeeded(withName: projectName)
-//        
-//        if projectFolder.containsFile(named: file.name) {
-//            print("Deleting old executable to replace with latest build...")
-//            try projectFolder.file(named: file.name).delete()
-//        }
-//        
-//        try file.copy(to: projectFolder)
-//        
-//        print("Successfully managed executable for \(projectName)")
-//    }
-//}

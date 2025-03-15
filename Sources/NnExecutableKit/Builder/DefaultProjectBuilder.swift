@@ -8,8 +8,8 @@
 import SwiftShell
 
 struct DefaultProjectBuilder: ProjectBuilder {
-    func build(project: ProjectFolder, buildType: BuildType) throws {
-        let buildCommand = try makeBuildCommand(for: project, buildType: buildType)
+    func buildProject(name: String, path: String, projectType: ProjectType, buildType: BuildType) throws {
+        let buildCommand = try makeBuildCommand(name: name, path: path, projectType: projectType, buildType: buildType)
         
         try runAndPrint(bash: buildCommand)
     }
@@ -18,13 +18,13 @@ struct DefaultProjectBuilder: ProjectBuilder {
 
 // MARK: - Builder
 private extension DefaultProjectBuilder {
-    func makeBuildCommand(for project: ProjectFolder, buildType: BuildType) throws -> String {
-        switch project.type {
+    func makeBuildCommand(name: String, path: String, projectType: ProjectType, buildType: BuildType) throws -> String {
+        switch projectType {
         case .package:
             return "swift build -c \(buildType.rawValue)"
         case .project:
-            guard let scheme = selectScheme("\(project.path)\(project.name).xcodeproj") else {
-                throw NnExecutableError.missingScheme
+            guard let scheme = selectScheme("\(path)\(name).xcodeproj") else {
+                throw ExecutableError.missingScheme
             }
             return "xcodebuild -scheme \(scheme) -configuration \(buildType.rawValue) SYMROOT=$(PWD)/.build"
         }

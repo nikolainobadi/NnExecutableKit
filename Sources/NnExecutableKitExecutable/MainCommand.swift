@@ -37,10 +37,10 @@ struct SetPath: ParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Set the destination path for executables.")
 
     @Argument(help: "Path to the destination folder.")
-    var path: String?
+    var path: String
 
     func run() throws {
-//        try ExecutableManager().setPath(path)
+        try ExecutableManager().setPath(path: path)
     }
 }
 
@@ -50,7 +50,7 @@ struct DeletePath: ParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Delete the saved destination path.")
 
     func run() throws {
-//        ExecutableManager().deletePath()
+        ExecutableManager().deletePath()
     }
 }
 
@@ -60,7 +60,7 @@ struct PrintPath: ParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Print the saved destination path.")
 
     func run() throws {
-//        ExecutableManager().printPath()
+        ExecutableManager().printPath()
     }
 }
 
