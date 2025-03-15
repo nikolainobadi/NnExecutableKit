@@ -37,6 +37,13 @@ let package = Package(
                 "NnExecutableKit",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
+        ),
+        .testTarget(
+            name: "NnExecutableKitTests",
+            dependencies: [
+                "NnExecutableKit",
+//                .product(name: "NnTestHelpers", package: "NnTestKit")
+            ]
         )
     ]
 )
