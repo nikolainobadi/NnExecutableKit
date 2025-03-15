@@ -11,6 +11,8 @@ struct DefaultProjectBuilder: ProjectBuilder {
     func buildProject(name: String, path: String, projectType: ProjectType, buildType: BuildType) throws {
         let buildCommand = try makeBuildCommand(name: name, path: path, projectType: projectType, buildType: buildType)
         
+        print(buildCommand, terminator: "\n\n")
+        
         try runAndPrint(bash: buildCommand)
     }
 }
@@ -27,8 +29,8 @@ private extension DefaultProjectBuilder {
                 throw ExecutableError.missingScheme
             }
             
-            print("using scheme \(scheme) to create \(buildType.rawValue) build")
-            return "xcodebuild -scheme \(scheme) -configuration \(buildType.rawValue) SYMROOT=$(PWD)/.build"
+            print("using scheme \(scheme) to create \(buildType.rawValue) build", terminator: "\n\n")
+            return "xcodebuild -scheme \(scheme) -configuration \(buildType.rawValue) SYMROOT=$(PWD)/.build -quiet"
         }
     }
 
