@@ -26,27 +26,18 @@ private extension DefaultProjectBuilder {
             guard let scheme = selectScheme("\(path)\(name).xcodeproj") else {
                 throw ExecutableError.missingScheme
             }
+            
+            print("using scheme \(scheme) to create \(buildType.rawValue) build")
             return "xcodebuild -scheme \(scheme) -configuration \(buildType.rawValue) SYMROOT=$(PWD)/.build"
         }
     }
 
     func selectScheme(_ path: String) -> String? {
+        print("Selecting project scheme...")
         let output = run(bash: "xcodebuild -list -project \(path)").stdout
-        var schemes = [String]()
-        var schemesSection = false
+        let lines = output.split(separator: "\n")
+        guard let startIndex = lines.firstIndex(where: { $0.contains("Schemes:") }) else { return nil }
         
-        for line in output.split(separator: "\n") {
-            if line.contains("Schemes:") {
-                schemesSection = true
-                continue
-            }
-            if schemesSection {
-                if line.trimmingCharacters(in: .whitespaces).isEmpty {
-                    break
-                }
-                schemes.append(line.trimmingCharacters(in: .whitespaces))
-            }
-        }
-        return schemes.first
+        return lines[(startIndex + 1)...].first { !$0.trimmingCharacters(in: .whitespaces).isEmpty }?.trimmingCharacters(in: .whitespaces)
     }
 }

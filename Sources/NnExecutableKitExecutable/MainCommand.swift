@@ -11,10 +11,8 @@ import NnExecutableKit
 struct MainCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "Utility to manage and copy Swift project executables into a more convenient directory.",
-        subcommands: [
-            Move.self,
-            SetPath.self, DeletePath.self, PrintPath.self
-        ]
+        subcommands: [Move.self,SetPath.self, DeletePath.self, PrintPath.self],
+        defaultSubcommand: Move.self
     )
 }
 
