@@ -21,7 +21,7 @@ private extension DefaultProjectBuilder {
     func makeBuildCommand(name: String, path: String, projectType: ProjectType, buildType: BuildType) throws -> String {
         switch projectType {
         case .package:
-            return "swift build -c \(buildType.rawValue)"
+            return "swift build -c \(buildType.rawValue) --arch arm64 --arch x86_64"
         case .project:
             guard let scheme = selectScheme("\(path)\(name).xcodeproj") else {
                 throw ExecutableError.missingScheme
