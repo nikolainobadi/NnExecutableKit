@@ -11,8 +11,6 @@ struct DefaultProjectBuilder: ProjectBuilder {
     func buildProject(name: String, path: String, projectType: ProjectType, buildType: BuildType) throws {
         let buildCommand = try makeBuildCommand(name: name, path: path, projectType: projectType, buildType: buildType)
         
-        print(buildCommand, terminator: "\n\n")
-        
         try runAndPrint(bash: buildCommand)
     }
 }
