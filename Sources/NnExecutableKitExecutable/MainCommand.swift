@@ -1,5 +1,5 @@
 //
-//  ExecutableManagerCommand.swift
+//  MainCommand.swift
 //
 //
 //  Created by Nikolai Nobadi on 2/26/24.
@@ -8,7 +8,7 @@
 import ArgumentParser
 import NnExecutableKit
 
-struct ExecutableManagerCommand: ParsableCommand {
+struct MainCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "Utility to manage and copy Swift project executables into a more convenient directory.",
         subcommands: [
