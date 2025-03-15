@@ -55,7 +55,6 @@ public extension ExecutableManager {
     }
     
     func manageExecutable(buildType: BuildType) throws {
-        print("new version")
         let destination = try loadDestination()
         let currentFolder = try getCurrentFolder()
         let projectType = try getProjectType(of: currentFolder)
@@ -114,6 +113,11 @@ private extension ExecutableManager {
         let toolsFolder = try Folder(path: destination)
         let projectFolder = try toolsFolder.createSubfolderIfNeeded(withName: projectName)
 
+        if projectFolder.containsFile(named: file.name) {
+            print("Deleting old executable to replace with latest build...")
+            try projectFolder.file(named: file.name).delete()
+        }
+        
         try file.copy(to: projectFolder)
         
         print("Successfully managed executable for \(projectName)")
