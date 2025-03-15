@@ -111,13 +111,13 @@ private extension ExecutableManager {
         let projectFolder = try toolsFolder.createSubfolderIfNeeded(withName: projectName)
 
         if projectFolder.containsFile(named: file.name) {
-            print("Deleting old executable to replace with latest build...")
+            print("\nDeleting old executable to replace with latest build...")
             try projectFolder.file(named: file.name).delete()
         }
         
         try file.copy(to: projectFolder)
         
-        print("Successfully managed executable for \(projectName)")
+        print("Successfully managed executable for \(projectName)", terminator: "\n\n")
     }
 }
 
