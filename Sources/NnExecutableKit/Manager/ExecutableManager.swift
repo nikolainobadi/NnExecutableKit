@@ -14,7 +14,7 @@ public struct ExecutableManager {
     private let currentFolderPath: String?
     private let projectBuilder: ProjectBuilder
     
-    init(key: String = "", defaults: UserDefaults = .standard, currentFolderPath: String?, projectBuilder: ProjectBuilder) {
+    init(key: String = "destinationKey", defaults: UserDefaults = .standard, currentFolderPath: String?, projectBuilder: ProjectBuilder) {
         self.key = key
         self.defaults = defaults
         self.currentFolderPath = currentFolderPath
@@ -46,12 +46,9 @@ public extension ExecutableManager {
     }
     
     func printPath() {
-        guard let path = try? loadDestination() else {
-            print("No Destination path set")
-            return
+        if let path = try? loadDestination() {
+            print("Current Destination:", path)
         }
-        
-        print("Current Destination:", path)
     }
     
     func manageExecutable(buildType: BuildType) throws {
