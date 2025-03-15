@@ -23,9 +23,8 @@ public struct NnExecutableManager {
 
 // MARK: - Actions
 public extension NnExecutableManager {
-    func manageExecutable(buildType: BuildType?) throws {
+    func manageExecutable(buildType: BuildType) throws {
         let destination = try loadDestination()
-        let buildType = buildType ?? .release
         let projectFolder = try loadCurrentFolderWithExecutable()
         
         try buildProject(project: projectFolder, buildType: buildType)

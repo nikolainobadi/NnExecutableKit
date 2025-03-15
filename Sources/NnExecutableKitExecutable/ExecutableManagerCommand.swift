@@ -11,8 +11,8 @@ import NnExecutableKit
 struct ExecutableManagerCommand: ParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Utility to manage and copy Swift project executables into a more convenient directory.")
     
-    @Option(name: [.customLong("exec"), .customShort("e")], help: "Specify 'debug' or 'release' to copy the corresponding executable.")
-    var buildType: BuildType?
+    @Flag(help: "Select build type: -d for Debug, -r for Release.")
+    var buildType: BuildType = .release
     
     func run() throws {
         try NnExecutableManager().manageExecutable(buildType: buildType)
@@ -21,4 +21,13 @@ struct ExecutableManagerCommand: ParsableCommand {
 
 
 // MARK: - Extension Dependencies
-extension BuildType: ExpressibleByArgument { }
+extension BuildType: EnumerableFlag {
+    public static func name(for value: BuildType) -> NameSpecification {
+        switch value {
+        case .debug:
+            return [.customShort("d")]
+        case .release:
+            return [.customShort("r")]
+        }
+    }
+}
