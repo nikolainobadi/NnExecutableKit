@@ -1,156 +1,182 @@
 //
 //  ExecutableManagerTests.swift
-//  NnExecutableKit
+//  NnExecutableKitTests
 //
 //  Created by Nikolai Nobadi on 3/14/25.
 //
 
 import Files
-import Testing
+import XCTest
 @testable import NnExecutableKit
 
-@Suite
-struct ExecutableManagerTests {
-    @Test
-    func builds_the_project_and_moves_the_executable_when_everything_is_set_up_correctly() throws {
-        let mockPathStore = MockPathStore(storedPath: Folder.temporary.path)
+final class ExecutableManagerTests: XCTestCase {
+    private var tempFolder: Folder!
+
+    override func setUp() {
+        super.setUp()
+        tempFolder = try? Folder.temporary.createSubfolderIfNeeded(withName: "TestProject")
+    }
+
+    override func tearDown() {
+        super.tearDown()
+        if let tempFolder = tempFolder {
+            deleteFolderContents(tempFolder)
+            
+            try? tempFolder.delete()
+        }
+        
+        tempFolder = nil
+    }
+}
+
+
+// MARK: - Unit Tests
+extension ExecutableManagerTests {
+    func test_starting_values_are_empty() {
+        let (_, builder) = makeSUT(currentFolderPath: nil)
+        
+        XCTAssertNil(builder.name)
+        XCTAssertNil(builder.path)
+        XCTAssertNil(builder.buildType)
+        XCTAssertNil(builder.projectType)
+    }
+    
+    func test_fails_if_no_destination_path_is_set() {
+        let (sut, _) = makeSUT(testPath: nil, currentFolderPath: nil) // No folder path set
+
+        XCTAssertThrowsError(try sut.manageExecutable(buildType: .release)) { error in
+            XCTAssertEqual(error as? ExecutableError, ExecutableError.missingToolPath)
+        }
+    }
+    
+    func test_fails_if_no_project_type_is_found_in_current_folder() throws {
+        try tempFolder!.createSubfolderIfNeeded(withName: ".build/release") // No executables
+
+        let (sut, _) = makeSUT(currentFolderPath: tempFolder!.path)
+
+        XCTAssertThrowsError(try sut.manageExecutable(buildType: .release)) { error in
+            XCTAssertEqual(error as? ExecutableError, ExecutableError.missingProjectType)
+        }
+    }
+    
+    func test_fails_if_the_build_process_encounters_an_error() throws {
+        let (sut, _) = makeSUT(currentFolderPath: tempFolder!.path, shouldThrowError: true)
+        
+        try tempFolder!.createFile(at: "Package.swift")
+
+        XCTAssertThrowsError(try sut.manageExecutable(buildType: .release)) { error in
+            XCTAssertEqual(error as? ExecutableError, ExecutableError.cannotCreateBuild)
+        }
+    }
+
+    func test_fails_if_no_executable_is_found_after_building() throws {
+        try tempFolder!.createSubfolderIfNeeded(withName: ".build/release") // No executables
+
+        let (sut, _) = makeSUT(currentFolderPath: tempFolder!.path)
+        
+        try tempFolder!.createFile(at: "Package.swift")
+
+        XCTAssertThrowsError(try sut.manageExecutable(buildType: .release)) { error in
+            XCTAssertEqual(error as? ExecutableError, ExecutableError.fetchFailure)
+        }
+    }
+    
+    func test_builds_swift_packages_and_moves_executable_when_everything_is_set_up_correctly() throws {
         let tempFolder = try Folder.temporary.createSubfolderIfNeeded(withName: "TestProject")
         let buildFolder = try tempFolder.createSubfolderIfNeeded(withName: ".build/release")
-        let executableFile = try buildFolder.createFile(named: "TestProject")
+        let (sut, builder) = makeSUT(currentFolderPath: tempFolder.path)
+        
+        try tempFolder.createFile(at: "Package.swift")
+        try buildFolder.createFile(named: "TestProject")
+        try sut.manageExecutable(buildType: .release)
 
-        let mockFolderHandler = MockFolderHandler(
-            simulatedProjectFolder: ProjectFolder(folder: tempFolder, type: .package),
-            simulatedBuildFolder: buildFolder,
-            simulatedFiles: [executableFile]
-        )
-
-        let mockProjectBuilder = MockProjectBuilder()
-        let manager = ExecutableManager(
-            pathStore: mockPathStore,
-            folderHandler: mockFolderHandler,
-            projectBuilder: mockProjectBuilder
-        )
-
-        try manager.manageExecutable(buildType: .release)
-
-        #expect(mockProjectBuilder.buildCalled)
+        XCTAssertNotNil(builder.name)
+        XCTAssertNotNil(builder.path)
+        XCTAssertNotNil(builder.buildType)
+        XCTAssertEqual(builder.projectType, .package)
     }
+    
+    func test_builds_xcode_projects_and_moves_executable_when_everything_is_set_up_correctly() throws {
+        let tempFolder = try Folder.temporary.createSubfolderIfNeeded(withName: "TestProject")
+        let buildFolder = try tempFolder.createSubfolderIfNeeded(withName: ".build/release")
+        let (sut, builder) = makeSUT(currentFolderPath: tempFolder.path)
+        
+        try tempFolder.createSubfolder(named: "TestApp.xcodeproj")
+        try buildFolder.createFile(named: "TestProject")
+        try sut.manageExecutable(buildType: .release)
 
-    @Test
-    func fails_if_no_destination_path_is_set() {
-        let mockPathStore = MockPathStore(storedPath: nil)
-        let mockFolderHandler = MockFolderHandler()
-        let mockProjectBuilder = MockProjectBuilder()
+        XCTAssertNotNil(builder.name)
+        XCTAssertNotNil(builder.path)
+        XCTAssertNotNil(builder.buildType)
+        XCTAssertEqual(builder.projectType, .project)
+    }
+}
 
-        let manager = ExecutableManager(
-            pathStore: mockPathStore,
-            folderHandler: mockFolderHandler,
-            projectBuilder: mockProjectBuilder
-        )
 
-        #expect(throws: ExecutableError.missingToolPath) {
-            try manager.manageExecutable(buildType: .release)
+// MARK: - SUT
+private extension ExecutableManagerTests {
+    func makeSUT(testKey: String = "testKey", testPath: String? = Folder.temporary.path, currentFolderPath: String?, shouldThrowError: Bool = false) -> (sut: ExecutableManager, projectBuilder: MockProjectBuilder) {
+        let testSuiteName = "com.nikolainobadi.executableManagerTests"
+        let userDefaults = UserDefaults(suiteName: testSuiteName)!
+        userDefaults.removePersistentDomain(forName: testSuiteName) // Ensure a clean state
+        
+        if let testPath {
+            userDefaults.set(testPath, forKey: testKey)
         }
+
+        let projectBuilder = MockProjectBuilder(shouldThrowError: shouldThrowError)
+        let sut = ExecutableManager(key: testKey, defaults: userDefaults, currentFolderPath: currentFolderPath, projectBuilder: projectBuilder)
+
+        return (sut, projectBuilder)
     }
+    
+    func makeDefaults() -> UserDefaults {
+        let testSuiteName = "com.nikolainobadi.executableManagerTests"
+        let userDefaults = UserDefaults(suiteName: testSuiteName)!
+        userDefaults.removePersistentDomain(forName: testSuiteName)
+        
+        return userDefaults
+        
+    }
+}
 
-    @Test
-    func fails_if_the_build_process_encounters_an_error() {
-        let mockPathStore = MockPathStore(storedPath: try! Folder.home.subfolder(named: "Desktop").createSubfolderIfNeeded(withName: "NnExTests").path)
-        let mockFolderHandler = MockFolderHandler(simulatedProjectFolder: ProjectFolder(folder: Folder.temporary, type: .package))
-        var mockProjectBuilder = MockProjectBuilder(shouldThrowError: true)
 
-        let manager = ExecutableManager(
-            pathStore: mockPathStore,
-            folderHandler: mockFolderHandler,
-            projectBuilder: mockProjectBuilder
-        )
-
-        #expect(throws: ExecutableError.cannotCreateBuild) {
-            try manager.manageExecutable(buildType: .release)
+// MARK: - Helper Classes
+extension ExecutableManagerTests {
+    final class MockProjectBuilder: ProjectBuilder {
+        private let shouldThrowError: Bool
+        
+        private(set) var name: String?
+        private(set) var path: String?
+        private(set) var buildType: BuildType?
+        private(set) var projectType: ProjectType?
+        
+        init(shouldThrowError: Bool = false) {
+            self.shouldThrowError = shouldThrowError
         }
-    }
 
-    @Test
-    func fails_if_no_executable_is_found_after_building() {
-        let mockPathStore = MockPathStore(storedPath: "/mock/destination")
-        let tempFolder = try! Folder.temporary.createSubfolderIfNeeded(withName: "TestProject")
-        let buildFolder = try! tempFolder.createSubfolderIfNeeded(withName: ".build/release")
-
-        let mockFolderHandler = MockFolderHandler(
-            simulatedProjectFolder: ProjectFolder(folder: tempFolder, type: .package),
-            simulatedBuildFolder: buildFolder,
-            simulatedFiles: [] // No executables found
-        )
-
-        let mockProjectBuilder = MockProjectBuilder()
-
-        let manager = ExecutableManager(
-            pathStore: mockPathStore,
-            folderHandler: mockFolderHandler,
-            projectBuilder: mockProjectBuilder
-        )
-
-        #expect(throws: ExecutableError.fetchFailure) {
-            try manager.manageExecutable(buildType: .release)
+        func buildProject(name: String, path: String, projectType: ProjectType, buildType: BuildType) throws {
+            if shouldThrowError { throw ExecutableError.cannotCreateBuild }
+            
+            self.name = name
+            self.path = path
+            self.buildType = buildType
+            self.projectType = projectType
         }
     }
 }
 
-// MARK: - Mock PathStore
-final class MockPathStore: PathStore {
-    private(set) var storedPath: String?
-    
-    init(storedPath: String? = nil) {
-        self.storedPath = storedPath
-    }
 
-    func getDestinationPath() -> String? {
-        return storedPath
-    }
-    
-    func setDestinationPath(_ path: String) {
-        storedPath = path
-    }
-}
-
-// MARK: - Mock FolderHandler
-struct MockFolderHandler: FolderHandler {
-    var simulatedProjectFolder: ProjectFolder?
-    var simulatedBuildFolder: Folder?
-    var simulatedFiles: [File] = []
-    var shouldThrowError = false
-
-    func getCurrentFolder() throws -> ProjectFolder {
-        if shouldThrowError { throw ExecutableError.cannotCreateBuild }
-        return simulatedProjectFolder!
-    }
-
-    func getSubfolder(named: String, in folder: ProjectFolder) throws -> Folder {
-        if shouldThrowError { throw ExecutableError.fetchFailure }
-        return simulatedBuildFolder!
-    }
-
-    func getFiles(in folder: Folder) -> [File] { simulatedFiles }
-
-    func createSubfolderIfNeeded(named: String, in folder: Folder) throws -> Folder {
-        try folder.createSubfolderIfNeeded(withName: named)
-    }
-
-    func copyFile(_ file: File, to destination: Folder) throws {}
-}
-
-// MARK: - Mock ProjectBuilder
-final class MockProjectBuilder: ProjectBuilder {
-    private let shouldThrowError: Bool
-    
-    private(set) var buildCalled = false
-    
-    init(shouldThrowError: Bool = false) {
-        self.shouldThrowError = shouldThrowError
-    }
-
-    func build(project: ProjectFolder, buildType: BuildType) throws {
-        if shouldThrowError { throw ExecutableError.cannotCreateBuild }
-        buildCalled = true
+// MARK: - Helpers
+private extension ExecutableManagerTests {
+    func deleteFolderContents(_ folder: Folder) {
+        for file in folder.files {
+            try? file.delete()
+        }
+        
+        for subfolder in folder.subfolders {
+            deleteFolderContents(subfolder)
+            try? subfolder.delete()
+        }
     }
 }
