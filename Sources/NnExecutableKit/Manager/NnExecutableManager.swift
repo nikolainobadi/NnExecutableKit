@@ -7,16 +7,24 @@
 
 import Files
 import SwiftShell
+import Foundation
+import SwiftPicker
 
 public struct NnExecutableManager {
-    public init() { }
+    private let picker: SwiftPicker
+    private let defaults: UserDefaults
+    
+    public init(picker: SwiftPicker = .init(), defaults: UserDefaults = .standard) {
+        self.picker = picker
+        self.defaults = defaults
+    }
 }
 
 
 // MARK: - Actions
 public extension NnExecutableManager {
     func manageExecutable(buildType: BuildType?) throws {
-        let config = try loadConfig()
+        let destination = try loadDestination()
         let buildType = buildType ?? .release
         let projectFolder = try loadCurrentFolderWithExecutable()
         
@@ -26,27 +34,36 @@ public extension NnExecutableManager {
             throw NnExecutableError.fetchFailure
         }
         
-        try copyExecutableFile(executableFile, projectName: projectFolder.name, config: config)
+        try copyExecutableFile(executableFile, projectName: projectFolder.name, destination: destination)
     }
 }
 
 
 // MARK: - Private Methods
 private extension NnExecutableManager {
-    func loadConfig() throws -> NnExConfig {
-        // TODO: - should load actual config
+    func loadDestination() throws -> String {
+        if let path = defaults.string(forKey: .destinationKey), !path.isEmpty {
+            return path
+        }
         
-        return .defaultConfig
+        let path = try picker.getRequiredInput("Enter the path to the folder where you want your tools to reside.")
+        
+        defaults.set(path, forKey: .destinationKey)
+        
+        guard let path = defaults.string(forKey: .destinationKey), !path.isEmpty else {
+            throw NnExecutableError.cannotCreateBuild
+        }
+        
+        return path
     }
     
     func loadCurrentFolderWithExecutable() throws -> ProjectFolder {
         let folder = Folder.current
+        
         if folder.containsFile(named: "Package.swift") {
-            print("folder contains a swift package")
             return .init(folder: folder, type: .package)
         }
         
-        print("checking for an xcode project")
         if folder.subfolders.filter({ $0.extension == "xcodeproj" }).count > 0 {
             return .init(folder: folder, type: .project)
         }
@@ -105,8 +122,8 @@ private extension NnExecutableManager {
         return buildFolder.files.first(where: { $0.nameExcludingExtension.contains("\(projectName)") && $0.extension == nil })
     }
     
-    func copyExecutableFile(_ file: File, projectName: String, config: NnExConfig) throws {
-        let nnToolsFolder = try Folder(path: config.nnToolsPath)
+    func copyExecutableFile(_ file: File, projectName: String, destination: String) throws {
+        let nnToolsFolder = try Folder(path: destination)
         let projectFolder = try nnToolsFolder.createSubfolderIfNeeded(withName: projectName)
         
         if projectFolder.containsFile(named: file.name) {
@@ -135,4 +152,10 @@ struct ProjectFolder {
 
 enum ProjectType {
     case package, project
+}
+
+extension String {
+    static var destinationKey: String {
+        return "destinationKey"
+    }
 }

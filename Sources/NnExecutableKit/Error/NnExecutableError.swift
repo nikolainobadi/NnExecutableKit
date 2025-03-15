@@ -6,20 +6,8 @@
 //
 
 public enum NnExecutableError: Error {
+    case missingToolPath
     case cannotCreateBuild
     case fetchFailure
     case missingScheme
-}
-
-extension NnExecutableError {
-    var message: String {
-        switch self {
-        case .cannotCreateBuild:
-            return "Directory cannot build an executable."
-        case .fetchFailure:
-            return "Failed to fetch executable."
-        case .missingScheme:
-            return "Cannot find scheme for xcode project"
-        }
-    }
 }
